@@ -39,24 +39,26 @@ function getListingDetails() {
     if (listingDetails.type === 'tm') {
 
         listingDetails.title = encodeURIComponent($('.tm-property-listing-body__title')?.text()?.trim()?.toLowerCase());
-        const location = $('.tm-property-listing-body__location').text().trim().split(',');
-        listingDetails.region = location[location.length - 1].trim().toLowerCase().replace(/ /g, '-');
-        listingDetails.district = location[location.length - 2].trim().toLowerCase().replace(/ /g, '-');
-        listingDetails.suburb = location[location.length - 3].trim().toLowerCase().replace(/ /g, '-');
+        listingDetails.baseUrl = $('.tm-breadcrumbs').find('.o-breadcrumbs__item').last().find('a').attr('href');
         listingDetails['anchor'] = '.tm-property-listing-body__price';
 
     } else {
 
         listingDetails.title = encodeURIComponent($('div[data-test="listing-subtitle"]')?.text()?.trim()?.toLowerCase());
-        listingDetails.region = $('a[data-test="breadcrumbs__region"]').text().trim().toLowerCase().replace(/ /g, '-');
-        listingDetails.district = $('a[data-test="breadcrumbs__district"]').text().trim().toLowerCase().replace(/ /g, '-');
-        listingDetails.suburb = $('a[data-test="breadcrumbs__suburb"]').text().trim().toLowerCase().replace(/ /g, '-');
+        listingDetails.baseUrl = $('a[data-test="breadcrumbs__suburb"]').attr('href');
         listingDetails['anchor'] = 'div[data-test="page-section"]';
 
     }
 
     return listingDetails;
 
+}
+
+function formatText(text) {
+    result = text.trim().toLowerCase().replace(/ /g, '-');
+    result = result.replace(/'/g, '');
+    
+    return result;
 }
 
 function setUpHtml(listingDetails) {
@@ -229,11 +231,15 @@ async function checkListingPrice(listingDetails, min, max) {
 
     if (listingDetails.type === 're') {
 
-        url = `https://www.realestate.co.nz/${listingDetails.propertyCategory}/sale/${listingDetails.region}/${listingDetails.district}/${listingDetails.suburb}?k="${listingDetails.title}"&minp=${min}&maxp=${max}`;
+        url = `https://www.realestate.co.nz${listingDetails.baseUrl}?k="${listingDetails.title}"`;
+        if (min > 0) {
+            url += `&minp=${min}`;
+        }
+        url += `&maxp=${max}`;
 
     } else {
 
-        url = `https://www.trademe.co.nz/a/property/residential/sale/${listingDetails.region}/${listingDetails.district}/${listingDetails.suburb}/search?price_min=${min}&price_max=${max}&search_string=${listingDetails.title}`;
+        url = `https://www.trademe.co.nz/a/${listingDetails.baseUrl}/search?price_min=${min}&price_max=${max}&search_string=${listingDetails.title}`;
 
     }
 
